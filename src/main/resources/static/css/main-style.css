@@ -1,0 +1,18 @@
+body {
+    width: 1160px;
+    margin: 1vh auto 0;
+}
+
+.btnAddObject {
+    display: flex;
+    justify-content: center;
+    margin: 40px 0;
+}
+
+.btn-actions {
+    opacity: 0 !important;
+}
+
+.data-row:hover .btn-actions {
+    opacity: 1 !important;
+}
