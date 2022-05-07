@@ -10,31 +10,27 @@ import com.polozov.bookprojectweb.service.GenreService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/book")
 public class BookController {
 
     private final BookService bookService;
     private final AuthorService authorService;
     private final GenreService genreService;
 
-    @GetMapping
+    @GetMapping("/book")
     public String bookList(Model model) {
         List<Book> books = bookService.getAll();
         model.addAttribute("books", books);
         return "book";
     }
 
-    @GetMapping("/edit")
-    public String editBook(@RequestParam(value = "id", defaultValue = "0") int id, Model model) {
+    @GetMapping("/book/edit/{id}")
+    public String editBook(@PathVariable("id") int id, Model model) {
         Book book;
         if (id != 0) {
             book = bookService.getById(id).orElseThrow(ObjectNotFoundException::new);
@@ -47,15 +43,15 @@ public class BookController {
         return "book-edit";
     }
 
-    @PostMapping("/edit")
+    @PostMapping("/book/edit")
     public String saveBook(Book book) {
         bookService.update(book);
         return "redirect:/book";
     }
 
-    @GetMapping("/remove")
-    public String deleteGenre(@RequestParam("id") long id) {
-        genreService.deleteById(id);
+    @DeleteMapping("/book/{id}")
+    public String deleteGenre(@PathVariable("id") long id) {
+        bookService.deleteById(id);
         return "redirect:/book";
     }
 }

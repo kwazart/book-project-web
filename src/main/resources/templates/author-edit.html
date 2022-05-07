@@ -23,15 +23,16 @@
             <a class="nav-link" href="genre.html" th:href="@{/genre}">Жанры</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="comment.html" th:href="@{/comment}">Комментарии</a>
+            <a class="nav-link" href="comment.html" th:href="@{/comment/0}">Комментарии</a>
         </li>
     </ul>
 </header>
 
 <section class="egitAuthorSection mt-3">
-    <form id="edit-form" action="author-edit.html" th:method="post" th:action="@{/author/edit(id=${author.id})}" th:object="${author}">
+    <form id="edit-form" action="author-edit.html" th:method="post" th:action="@{/author/edit/}" th:object="${author}">
         <div class="mb-3">
             <label for="editableAuthorName" class="form-label">Наименование</label>
+            <input type="text" name="id" class="form-control"  value="John Doe" th:value="*{id}" hidden>
             <input type="text" name="name" class="form-control" id="editableAuthorName" value="John Doe" th:value="*{name}" placeholder="Имя автора">
         </div>
         <button type="submit" class="btn btn-primary">Подтвердить</button>

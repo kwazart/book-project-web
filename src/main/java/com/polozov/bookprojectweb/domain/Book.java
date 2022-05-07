@@ -23,11 +23,11 @@ public class Book {
     private String name;
 
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "author_id", foreignKey = @ForeignKey(name = "author_fk"))
     private Author author;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "genre_id", foreignKey = @ForeignKey(name = "genre_fk"))
     private Genre genre;
 }

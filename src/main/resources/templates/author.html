@@ -23,13 +23,13 @@
             <a class="nav-link" href="genre.html" th:href="@{/genre}">Жанры</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="comment.html" th:href="@{/comment}">Комментарии</a>
+            <a class="nav-link" href="comment.html" th:href="@{/comment/0}">Комментарии</a>
         </li>
     </ul>
 </header>
 
 <section class="btnAddObject">
-    <a href="author-edit.html" role="button" class="btn btn-dark" th:href="@{/author/edit}">Добавить</a>
+    <a href="author-edit.html" role="button" class="btn btn-dark" th:href="@{/author/edit/0}">Добавить</a>
 </section>
 
 <section>
@@ -43,8 +43,10 @@
             <td th:text="${author.id}">1</td>
             <td th:text="${author.name}">Тестовое имя</td>
             <td class="btn-actions">
-                <a href="author-edit.html" role="button" class="btn btn-outline-dark btn-sm" th:href="@{/author/edit(id=${author.id})}">Изменить</a>
-                <a href="author.html" role="button" class="btn btn-outline-dark btn-sm" th:href="@{/author/remove(id=${author.id})}">Удалить</a>
+                <form action="author.html" th:method="delete" th:action="@{'/author/' + ${author.id}}">
+                    <a href="author-edit.html" role="button" class="btn btn-outline-dark btn-sm" th:href="@{'/author/edit/' + ${author.id}}">Изменить</a>
+                    <button type="submit" class="btn btn-outline-dark btn-sm">Удалить</button>
+                </form>
             </td>
         </tr>
     </table>

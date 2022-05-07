@@ -12,20 +12,19 @@ import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/genre")
 public class GenreController {
 
     private final GenreService genreService;
 
-    @GetMapping
+    @GetMapping("/genre")
     public String genreList(Model model) {
         List<Genre> genres = genreService.getAll();
         model.addAttribute("genres", genres);
         return "genre";
     }
 
-    @GetMapping("/edit")
-    public String editGenre(@RequestParam(value = "id", defaultValue = "0") int id, Model model) {
+    @GetMapping("/genre/edit/{id}")
+    public String editGenre(@PathVariable("id") int id, Model model) {
         Genre genre;
         if (id != 0) {
             genre = genreService.getById(id).orElseThrow(ObjectNotFoundException::new);
@@ -36,14 +35,14 @@ public class GenreController {
         return "genre-edit";
     }
 
-    @PostMapping("/edit")
+    @PostMapping("/genre/edit")
     public String saveGenre(Genre genre) {
         genreService.update(genre);
         return "redirect:/genre";
     }
 
-    @GetMapping("/remove")
-    public String deleteGenre(@RequestParam("id") long id) {
+    @DeleteMapping("/genre/{id}")
+    public String deleteGenre(@PathVariable("id") long id) {
         genreService.deleteById(id);
         return "redirect:/genre";
     }

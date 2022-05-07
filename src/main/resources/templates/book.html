@@ -23,13 +23,13 @@
             <a class="nav-link" href="genre.html" th:href="@{/genre}">Жанры</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="comment.html" th:href="@{/comment}">Комментарии</a>
+            <a class="nav-link" href="comment.html" th:href="@{/comment/0}">Комментарии</a>
         </li>
     </ul>
 </header>
 
 <section class="btnAddObject">
-    <a href="book-edit.html" role="button" class="btn btn-dark" th:href="@{/book/edit}">Добавить</a>
+    <a href="book-edit.html" role="button" class="btn btn-dark" th:href="@{/book/edit/0}">Добавить</a>
 </section>
 
 <section>
@@ -47,8 +47,10 @@
             <td th:text="${book.author.name}">Тестовый автор</td>
             <td th:text="${book.genre.name}">Тестовый жанр</td>
             <td class="btn-actions">
-                <a href="book-edit.html" role="button" class="btn btn-outline-dark btn-sm" th:href="@{/book/edit(id=${book.id})}">Изменить</a>
-                <a href="book.html" role="button" class="btn btn-outline-dark btn-sm" th:href="@{/book/remove(id=${book.id})}">Удалить</a>
+                <form action="book.html" th:method="delete" th:action="@{'/book/' + ${book.id}}">
+                    <a href="book-edit.html" role="button" class="btn btn-outline-dark btn-sm" th:href="@{'/book/edit/' + ${book.id}}">Изменить</a>
+                    <button type="submit" class="btn btn-outline-dark btn-sm">Удалить</button>
+                </form>
             </td>
         </tr>
     </table>

@@ -30,7 +30,10 @@
             <artifactId>postgresql</artifactId>
             <version>42.3.3</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -54,6 +57,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
+
     </dependencies>
 
     <build>
@@ -72,5 +76,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>

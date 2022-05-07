@@ -29,7 +29,7 @@
 </header>
 
 <section class="btnAddObject">
-    <a href="genre-edit.html" role="button" class="btn btn-dark" th:href="@{/genre/edit}">Добавить</a>
+    <a href="genre-edit.html" role="button" class="btn btn-dark" th:href="@{/genre/edit/0}">Добавить</a>
 </section>
 
 <section>
@@ -43,8 +43,10 @@
             <td th:text="${genre.id}">1</td>
             <td th:text="${genre.name}">Тестовое имя</td>
             <td class="btn-actions">
-                <a href="genre-edit.html" role="button" class="btn btn-outline-dark btn-sm" th:href="@{/genre/edit(id=${genre.id})}">Изменить</a>
-                <a href="genre.html" role="button" class="btn btn-outline-dark btn-sm" th:href="@{/genre/remove(id=${genre.id})}">Удалить</a>
+                <form action="genre.html" th:method="delete" th:action="@{'/genre/' + ${genre.id}}">
+                    <a href="genre-edit.html" role="button" class="btn btn-outline-dark btn-sm" th:href="@{'/genre/edit/' + ${genre.id}}">Изменить</a>
+                    <button type="submit" class="btn btn-outline-dark btn-sm">Удалить</button>
+                </form>
             </td>
         </tr>
     </table>

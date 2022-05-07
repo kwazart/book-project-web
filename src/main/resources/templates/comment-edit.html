@@ -23,13 +23,13 @@
             <a class="nav-link" href="genre.html" th:href="@{/genre}">Жанры</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="comment.html" th:href="@{/comment}">Комментарии</a>
+            <a class="nav-link" href="comment.html" th:href="@{/comment/0}">Комментарии</a>
         </li>
     </ul>
 </header>
 
 <section class="egitCommentSection mt-3">
-    <form id="edit-form" action="comment-edit.html" th:method="post" th:action="@{/comment/edit(id=${comment.id})}" th:object="${comment}">
+    <form id="edit-form" action="comment-edit.html" th:method="post" th:action="@{/comment/edit/}" th:object="${comment}">
         <div class="mb-3">
             <label for="selectBookForCommentEdit" class="form-label">Выбор книги</label>
             <select class="form-select" id="selectBookForCommentEdit" aria-label="Default select example" th:field="*{book}">
@@ -38,6 +38,7 @@
         </div>
         <div class="mb-3">
             <label for="editableTextComment" class="form-label">Текст</label>
+            <input type="text" name="id" class="form-control"  value="John Doe" th:value="*{id}" hidden>
             <input type="text" name="text" class="form-control" id="editableTextComment" value="John Doe" th:value="*{text}" placeholder="Текст комментария">
         </div>
         <button type="submit" class="btn btn-primary">Подтвердить</button>
