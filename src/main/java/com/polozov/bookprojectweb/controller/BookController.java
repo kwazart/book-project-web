@@ -6,6 +6,7 @@ import com.polozov.bookprojectweb.domain.Genre;
 import com.polozov.bookprojectweb.exception.ObjectNotFoundException;
 import com.polozov.bookprojectweb.service.AuthorService;
 import com.polozov.bookprojectweb.service.BookService;
+import com.polozov.bookprojectweb.service.CommentService;
 import com.polozov.bookprojectweb.service.GenreService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -21,6 +22,7 @@ public class BookController {
     private final BookService bookService;
     private final AuthorService authorService;
     private final GenreService genreService;
+    private final CommentService commentService;
 
     @GetMapping("/book")
     public String bookList(Model model) {
@@ -40,6 +42,7 @@ public class BookController {
         model.addAttribute("book", book);
         model.addAttribute("genres", genreService.getAll());
         model.addAttribute("authors", authorService.getAll());
+        model.addAttribute("comments", commentService.getByBookId(book.getId()));
         return "book-edit";
     }
 
