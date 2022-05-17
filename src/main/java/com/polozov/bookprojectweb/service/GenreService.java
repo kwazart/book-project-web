@@ -9,7 +9,7 @@ public interface GenreService {
     Optional<Genre> getById(long id);
     Genre getByName(String name);
     List<Genre> getAll();
-    Genre add(String name);
+    Genre add(Genre genre);
     Genre update(Genre genre);
     void deleteById(long id);
 }

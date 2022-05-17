@@ -1,5 +1,7 @@
 package com.polozov.bookprojectweb.service;
 
+import com.polozov.bookprojectweb.exception.AuthorNotFoundException;
+import com.polozov.bookprojectweb.exception.GenreNotFoundException;
 import com.polozov.bookprojectweb.repository.BookRepository;
 import com.polozov.bookprojectweb.domain.Author;
 import com.polozov.bookprojectweb.domain.Book;
@@ -51,14 +53,18 @@ public class BookServiceImpl implements BookService {
 
     @Transactional
     @Override
-    public Book add(String bookName, String authorName, String genreName) {
-        Author author = authorService.getByName(authorName);
-        Genre genre = genreService.getByName(genreName);
-        if (author == null || genre == null) {
-            throw new ObjectNotFoundException("Object not found");
+    public Book add(Book book) {
+        Optional<Author> optionalAuthor = authorService.getById(book.getAuthor().getId());
+        Optional<Genre> optionalGenre = genreService.getById(book.getGenre().getId());
+        if (optionalAuthor.isEmpty()) {
+            throw new AuthorNotFoundException(book.getAuthor().getId());
         }
-
-        return repository.save(new Book(0, bookName, author, genre));
+        if (optionalGenre.isEmpty()) {
+            throw new GenreNotFoundException(book.getGenre().getId());
+        }
+        book.setAuthor(optionalAuthor.get());
+        book.setGenre(optionalGenre.get());
+        return repository.save(book);
     }
 
     @Transactional

@@ -38,7 +38,6 @@
         <p>Postgres (Docker)</p>
 <code>
 docker run --name book-project-postgres -p 5432:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=bookdb -d postgres
-4db3f102a6e498ed52bdcedb323f4483bf5f90b957f67688ec5f2314ce9c9951
 </code>
     </li>
 </ul>
