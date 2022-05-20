@@ -11,7 +11,7 @@ public interface BookService {
     List<Book> getByAuthorName(String name);
     List<Book> getByGenreName(String name);
     List<Book> getAll();
-    Book add(String bookName, String authorName, String genreName);
+    Book add(Book book);
     Book update(Book book);
     void deleteById(long id);
 }
