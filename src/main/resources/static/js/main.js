@@ -24,6 +24,11 @@ $(function () {
         default:
             showInfo();
     }
+
+    $.get('/user').done(function (username) {
+        $('#username').text(username);
+        login();
+    })
 })
 
 // AUTHORS
@@ -74,4 +79,13 @@ function doSectionVisible(sectionName) {
     $("#" + sectionName).css('display', 'block')
     $("#btn-" + sectionName).addClass("active");
 }
+
+function login() {
+    $('#loginBtn').html("Выйти")
+}
+
+function logout() {
+    $('#loginBtn').html("Войти")
+}
+
 
