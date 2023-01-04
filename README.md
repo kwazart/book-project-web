@@ -67,7 +67,7 @@
     <li>
         <code>ADMIN</code>
         <ul>
-            <li>login: admint@mail.com</li>
+            <li>login: admin@mail.com</li>
             <li>password: admin</li>
             <li>Доступно: То же, что и <code>client</code> + CRUD всех сущностей</li>
             <li>Статус: ACTIVE</li>

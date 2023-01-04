@@ -7,23 +7,22 @@ import com.polozov.bookprojectweb.controller.rest.dto.AuthorDto;
 import com.polozov.bookprojectweb.controller.rest.dto.BookDto;
 import com.polozov.bookprojectweb.controller.rest.dto.GenreDto;
 import com.polozov.bookprojectweb.domain.Author;
-import com.polozov.bookprojectweb.domain.Book;
 import com.polozov.bookprojectweb.domain.Genre;
 import com.polozov.bookprojectweb.repository.AuthorRepository;
-import com.polozov.bookprojectweb.repository.BookRepository;
 import com.polozov.bookprojectweb.repository.GenreRepository;
-import org.checkerframework.checker.units.qual.A;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-
-import java.util.List;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -32,16 +31,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("Book controller")
 @SpringBootTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestInstance(TestInstance.Lifecycle.PER_METHOD)
 public class BookControllerTest {
 
     @Autowired
     private WebApplicationContext context;
 
     private MockMvc mockMvc;
-
-    @Autowired
-    private BookRepository repository;
 
     @Autowired
     private GenreRepository genreRepository;
@@ -57,66 +53,41 @@ public class BookControllerTest {
                 .build();
     }
 
-    // -------------------------------- GET ALL --------------------------------
-    @WithMockUser(authorities = "author:read")
-    @DisplayName("Получение списка книг недоступно для разрешения author:read")
+    @WithMockUser(authorities = {"author:read", "genre:read", "author:write", "book:write", "genre:write"})
+    @DisplayName("Пользователь с правами author:read/write, genre:read/write, book:write не имеет доступ к чтению книг")
     @Test
-    public void shouldGettingAllBooksIsNotAvailableForAuthorReader() throws Exception {
-
+    public void shouldGettingBooksIsNotAvailableForNoBookReader() throws Exception {
+        // GET ALL
         mockMvc.perform(get("/api/book"))
                 .andExpect(status().isForbidden());
-    }
 
-    @WithMockUser(authorities = "book:read")
-    @DisplayName("Получение списка книг доступно для разрешения book:read")
-    @Test
-    public void shouldGettingAllBooksIsAvailableForBookReader() throws Exception {
-        mockMvc.perform(get("/api/book"))
-                .andExpect(status().isOk());
-    }
-
-    @WithMockUser(authorities = "genre:read")
-    @DisplayName("Получение списка книг недоступно для разрешения genre:read")
-    @Test
-    public void shouldGettingAllBooksIsNotAvailableForGenreReader() throws Exception {
-        mockMvc.perform(get("/api/book"))
-                .andExpect(status().isForbidden());
-    }
-
-    // -------------------------------- GET by ID --------------------------------
-    @WithMockUser(authorities = "author:read")
-    @DisplayName("Получение книги по id недоступно для разрешения author:read")
-    @Test
-    public void shouldGettingOneBookIsNotAvailableForAuthorReader() throws Exception {
+        // GET BY ID
         mockMvc.perform(get("/api/book/1"))
                 .andExpect(status().isForbidden());
     }
 
-    @WithMockUser(authorities = "book:read")
-    @DisplayName("Получение жанра по id доступно для разрешения book:read")
+    @WithMockUser(authorities = {"book:read"})
+    @DisplayName("Пользователь с правами book:read имеет доступ к чтению книг")
     @Test
-    public void shouldGettingOneBookIsAvailableForBookReader() throws Exception {
+    public void shouldGettingBooksIsAvailableForBookReader() throws Exception {
+        // GET ALL
+        mockMvc.perform(get("/api/book"))
+                .andExpect(status().isOk());
+
+        // GET BY ID
         mockMvc.perform(get("/api/book/1"))
                 .andExpect(status().isOk());
     }
 
-    @WithMockUser(authorities = "genre:read")
-    @DisplayName("Получение жанра по id недоступно для разрешения genre:read")
-    @Test
-    public void shouldGettingOneBookIsNotAvailableForGenreReader() throws Exception {
-        mockMvc.perform(get("/api/book/1"))
-                .andExpect(status().isForbidden());
-    }
 
-    // -------------------------------- CREATING --------------------------------
-    @WithMockUser(authorities = "author:write")
-    @DisplayName("Создание книги недоступно для разрешения author:write")
+    @WithMockUser(authorities = {"book:read", "author:read", "genre:write", "author:write", "genre:read"})
+    @DisplayName("Пользователь с правами author:read/write, genre:read/write, book:read не имеют доступ к созданию и изменению книг")
     @Test
-    public void shouldBookCreatingIsNotAvailableForAuthorWriter() throws Exception {
+    public void shouldAuthorChangingIsNotAvailableForNoAuthorWriter() throws Exception {
         Author author = authorRepository.save(new Author(0, "Автор-1"));
         Genre genre = genreRepository.save(new Genre(0, "Жанр-1"));
-
-        BookDto bookDto = new BookDto(
+        // CREATING
+        BookDto bookDto1 = new BookDto(
                 1,
                 "Новое название",
                 new AuthorDto(author.getId(), author.getName()),
@@ -124,85 +95,16 @@ public class BookControllerTest {
         );
 
         mockMvc.perform(post("/api/book")
-                        .content(convertObjectToJsonString(bookDto))
+                        .content(convertObjectToJsonString(bookDto1))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
-    }
 
-    @WithMockUser(authorities = "book:write")
-    @DisplayName("Создание книги доступно для разрешения book:write")
-    @Test
-    public void shouldBookCreatingIsAvailableForBookWriter() throws Exception {
-        Author author = authorRepository.save(new Author(0, "Автор-1"));
-        Genre genre = genreRepository.save(new Genre(0, "Жанр-1"));
-
-        BookDto bookDto = new BookDto(
-                1,
-                "Новое название",
-                new AuthorDto(author.getId(), author.getName()),
-                new GenreDto(genre.getId(), genre.getName())
-        );
-
-        mockMvc.perform(post("/api/book")
-                        .content(convertObjectToJsonString(bookDto))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-    }
-
-    @WithMockUser(authorities = "genre:write")
-    @DisplayName("Создание книги недоступно для разрешения genre:write")
-    @Test
-    public void shouldBookCreatingIsNotAvailableForGenreWriter() throws Exception {
-        Author author = authorRepository.save(new Author(0, "Автор-1"));
-        Genre genre = genreRepository.save(new Genre(0, "Жанр-1"));
-
-        BookDto bookDto = new BookDto(
-                1,
-                "Новое название",
-                new AuthorDto(author.getId(), author.getName()),
-                new GenreDto(genre.getId(), genre.getName())
-        );
-
-        mockMvc.perform(post("/api/book")
-                        .content(convertObjectToJsonString(bookDto))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isForbidden());
-    }
-
-    // -------------------------------- DELETING --------------------------------
-    @WithMockUser(authorities = "author:write")
-    @DisplayName("Удаление книги по id недоступно для разрешения author:write")
-    @Test
-    public void shouldDeletingBookIsNotAvailableForAuthorWriter() throws Exception {
+        // DELETING
         mockMvc.perform(delete("/api/book/1"))
                 .andExpect(status().isForbidden());
-    }
 
-    @WithMockUser(authorities = "book:write")
-    @DisplayName("Удаление книги по id доступно для разрешения book:write")
-    @Test
-    public void shouldDeletingBookIsNotAvailableForBookWriter() throws Exception {
-        mockMvc.perform(delete("/api/book/2"))
-                .andExpect(status().isOk());
-    }
-
-    @WithMockUser(authorities = "genre:write")
-    @DisplayName("Удаление жанра по id недоступно для разрешения genre:write")
-    @Test
-    public void shouldDeletingGenreIsNotAvailableForGenreWriter() throws Exception {
-        mockMvc.perform(delete("/api/book/3"))
-                .andExpect(status().isForbidden());
-    }
-
-    // -------------------------------- UPDATING --------------------------------
-    @WithMockUser(authorities = "author:write")
-    @DisplayName("Обновление книги по id недоступно для разрешения author:write")
-    @Test
-    public void shouldUpdatingBookIsNotAvailableForAuthorWriter() throws Exception {
-        Author author = authorRepository.save(new Author(0, "Автор-1"));
-        Genre genre = genreRepository.save(new Genre(0, "Жанр-1"));
-
-        BookDto bookDto = new BookDto(
+        // UPDATING
+        BookDto bookDto2 = new BookDto(
                 1,
                 "Новое название",
                 new AuthorDto(author.getId(), author.getName()),
@@ -210,49 +112,91 @@ public class BookControllerTest {
         );
 
         mockMvc.perform(put("/api/book/" + 1)
-                        .content(convertObjectToJsonString(bookDto))
+                        .content(convertObjectToJsonString(bookDto2))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
 
-    @WithMockUser(authorities = "book:write")
-    @DisplayName("Обновление книги по id доступно для разрешения book:write")
+    @WithMockUser(authorities = {"book:write"})
+    @DisplayName("Пользователь с правами book:write имеет доступ к созданию и изменению книг")
     @Test
-    public void shouldUpdatingBookIsAvailableForBookWriter() throws Exception {
+    public void shouldAuthorChangingIsAvailableForAuthorWriter() throws Exception {
         Author author = authorRepository.save(new Author(0, "Автор-1"));
         Genre genre = genreRepository.save(new Genre(0, "Жанр-1"));
-
-        BookDto bookDto = new BookDto(
+        // CREATING
+        BookDto bookDto1 = new BookDto(
                 1,
                 "Новое название",
                 new AuthorDto(author.getId(), author.getName()),
                 new GenreDto(genre.getId(), genre.getName())
         );
 
-        mockMvc.perform(put("/api/book/" + 2)
-                        .content(convertObjectToJsonString(bookDto))
+        mockMvc.perform(post("/api/book")
+                        .content(convertObjectToJsonString(bookDto1))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        // DELETING
+        mockMvc.perform(delete("/api/book/1"))
+                .andExpect(status().isOk());
+
+        // UPDATING
+        BookDto bookDto2 = new BookDto(
+                1,
+                "Новое название",
+                new AuthorDto(author.getId(), author.getName()),
+                new GenreDto(genre.getId(), genre.getName())
+        );
+
+        mockMvc.perform(put("/api/book/" + 1)
+                        .content(convertObjectToJsonString(bookDto2))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
     }
 
-    @WithMockUser(authorities = "genre:write")
-    @DisplayName("Обновление книги по id недоступно для разрешения genre:write")
+    @WithAnonymousUser
+    @DisplayName("Анонимный пользователь не имеет доступа к любым REST методам. Всегда происходит redirect")
     @Test
-    public void shouldUpdatingBookIsNotAvailableForGenreWriter() throws Exception {
+    public void shouldRedirectAfterAnyRestMethodForAnonymousUser() throws Exception {
+        // GET ALL
+        mockMvc.perform(get("/api/book"))
+                .andExpect(status().is3xxRedirection());
+
+        // GET BY ID
+        mockMvc.perform(get("/api/book/1"))
+                .andExpect(status().is3xxRedirection());
+
         Author author = authorRepository.save(new Author(0, "Автор-1"));
         Genre genre = genreRepository.save(new Genre(0, "Жанр-1"));
-
-        BookDto bookDto = new BookDto(
+        // CREATING
+        BookDto bookDto1 = new BookDto(
                 1,
                 "Новое название",
                 new AuthorDto(author.getId(), author.getName()),
                 new GenreDto(genre.getId(), genre.getName())
         );
 
-        mockMvc.perform(put("/api/book/" + 3)
-                        .content(convertObjectToJsonString(bookDto))
+        mockMvc.perform(post("/api/book")
+                        .content(convertObjectToJsonString(bookDto1))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isForbidden());
+                .andExpect(status().is3xxRedirection());
+
+        // DELETING
+        mockMvc.perform(delete("/api/book/1"))
+                .andExpect(status().is3xxRedirection());
+
+        // UPDATING
+        BookDto bookDto2 = new BookDto(
+                1,
+                "Новое название",
+                new AuthorDto(author.getId(), author.getName()),
+                new GenreDto(genre.getId(), genre.getName())
+        );
+
+        mockMvc.perform(put("/api/book/" + 1)
+                        .content(convertObjectToJsonString(bookDto2))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is3xxRedirection());
     }
 
     //Converts Object to Json String

@@ -8,13 +8,18 @@ import com.polozov.bookprojectweb.repository.AuthorRepository;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.util.Optional;
+
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -22,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("Author controller")
 @SpringBootTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestInstance(TestInstance.Lifecycle.PER_METHOD)
 public class AuthorControllerTest {
 
     @Autowired
@@ -30,11 +35,10 @@ public class AuthorControllerTest {
 
     private MockMvc mockMvc;
 
-    @Autowired
+    @MockBean
     private AuthorRepository repository;
 
     private long idForDeleting;
-    private long idForGetting;
     private long idForPutting;
 
     @BeforeEach
@@ -45,73 +49,75 @@ public class AuthorControllerTest {
                 .build();
     }
 
-    // -------------------------------- GET ALL --------------------------------
-    @WithMockUser(authorities = "author:read")
-    @DisplayName("Получение списка авторов доступно для разрешения author:read")
+    @WithMockUser(authorities = {"book:read", "genre:read", "author:write", "book:write", "genre:write"})
+    @DisplayName("Пользователь с правами book:read/write, genre:read/write, author:write не имеет доступ к чтению авторов")
     @Test
-    public void shouldGettingAllAuthorsIsAvailableForAuthorReader() throws Exception {
+    public void shouldGettingAuthorIsNotAvailableForNoAuthorReader() throws Exception {
+        // GET ALL
         mockMvc.perform(get("/api/author"))
+                .andExpect(status().isForbidden());
+
+        when(repository.findById(1L)).thenReturn(Optional.empty());
+        // GET BY ID
+        mockMvc.perform(get("/api/author/1"))
+                .andExpect(status().isForbidden());
+    }
+
+    @WithMockUser(authorities = "author:read")
+    @DisplayName("Права author:read имеют доступ к чтению данных")
+    @Test
+    public void shouldGettingAuthorIsAvailableForAuthorReader() throws Exception {
+        // GET ALL
+        mockMvc.perform(get("/api/author"))
+                .andExpect(status().isOk());
+
+        when(repository.findById(1L)).thenReturn(Optional.empty());
+        // GET BY ID
+        mockMvc.perform(get("/api/author/1"))
                 .andExpect(status().isOk());
     }
 
-    @WithMockUser(authorities = "book:read")
-    @DisplayName("Получение списка авторов недоступно для разрешения book:read")
-    @Test
-    public void shouldGettingAllAuthorsIsNotAvailableForBookReader() throws Exception {
-        mockMvc.perform(get("/api/author"))
-                .andExpect(status().isForbidden());
-    }
 
-    @WithMockUser(authorities = "genre:read")
-    @DisplayName("Получение списка авторов недоступно для разрешения genre:read")
+    @WithMockUser(authorities = {"book:read", "author:read", "genre:write", "book:write", "genre:read"})
+    @DisplayName("Пользователь с правами book:read/write, genre:read/write, author:read не имеют доступ к созданию и изменению авторов")
     @Test
-    public void shouldGettingAllAuthorsIsNotAvailableForGenreReader() throws Exception {
-        mockMvc.perform(get("/api/author"))
-                .andExpect(status().isForbidden());
-    }
+    public void shouldAuthorChangingIsNotAvailableForNoAuthorWriter() throws Exception {
+        // CREATING
+        Author author = new Author();
+        author.setName("Новый автор");
 
-    // -------------------------------- GET by ID --------------------------------
-    @WithMockUser(authorities = "author:read")
-    @DisplayName("Получение автора по id доступно для разрешения author:read")
-    @Test
-    public void shouldGettingOneAuthorIsNotAvailableForAuthorReader() throws Exception {
+        mockMvc.perform(post("/api/author")
+                        .content(convertObjectToJsonString(author))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
+
+        // DELETING
         Author author1 = new Author();
         author1.setName("Тестовый автор-1");
-        idForGetting = repository.save(author1).getId();
+        idForDeleting = repository.save(author1).getId();
 
-        mockMvc.perform(get("/api/author/" + idForGetting))
-                .andExpect(status().isOk());
-    }
+        mockMvc.perform(delete("/api/author/" + idForDeleting))
+                .andExpect(status().isForbidden());
 
-    @WithMockUser(authorities = "book:read")
-    @DisplayName("Получение автора по id недоступно для разрешения book:read")
-    @Test
-    public void shouldGettingOneAuthorIsNotAvailableForBookReader() throws Exception {
-        Author author1 = new Author();
-        author1.setName("Тестовый автор-1");
-        idForGetting = repository.save(author1).getId();
+        // UPDATING
+        Author author2 = new Author();
+        author2.setName("Тестовый автор-2");
+        idForPutting = repository.save(author2).getId();
 
-        mockMvc.perform(get("/api/author/" + idForGetting))
+        Author newAuthor = new Author();
+        newAuthor.setName("Новый автор-3");
+
+        mockMvc.perform(put("/api/author/" + idForPutting)
+                        .content(convertObjectToJsonString(newAuthor))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
 
-    @WithMockUser(authorities = "genre:read")
-    @DisplayName("Получение автора по id недоступно для разрешения genre:read")
-    @Test
-    public void shouldGettingOneAuthorIsNotAvailableForGenreReader() throws Exception {
-        Author author1 = new Author();
-        author1.setName("Тестовый автор-1");
-        idForGetting = repository.save(author1).getId();
-
-        mockMvc.perform(get("/api/author/" + idForGetting))
-                .andExpect(status().isForbidden());
-    }
-
-    // -------------------------------- CREATING --------------------------------
-    @WithMockUser(authorities = "author:write")
-    @DisplayName("Создание автора доступно для разрешения author:write")
+    @WithMockUser(authorities = {"author:write"})
+    @DisplayName("Пользователь с правами author:write имеет доступ к созданию и изменению авторов")
     @Test
     public void shouldAuthorCreatingIsAvailableForAuthorWriter() throws Exception {
+        // CREATING
         Author author = new Author();
         author.setName("Новый автор");
 
@@ -119,79 +125,19 @@ public class AuthorControllerTest {
                         .content(convertObjectToJsonString(author))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-    }
 
-    @WithMockUser(authorities = "book:write")
-    @DisplayName("Создание автора недоступно для разрешения book:write")
-    @Test
-    public void shouldAuthorCreatingIsNotAvailableForBookWriter() throws Exception {
-        Author author = new Author();
-        author.setName("Новый автор");
-
-        mockMvc.perform(post("/api/author")
-                        .content(convertObjectToJsonString(author))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isForbidden());
-    }
-
-    @WithMockUser(authorities = "genre:write")
-    @DisplayName("Создание автора недоступно доступно для разрешения genre:write")
-    @Test
-    public void shouldAuthorCreatingIsNotAvailableForGenreWriter() throws Exception {
-        Author author = new Author();
-        author.setName("Новый автор");
-
-        mockMvc.perform(post("/api/author")
-                        .content(convertObjectToJsonString(author))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isForbidden());
-    }
-
-    // -------------------------------- DELETING --------------------------------
-    @WithMockUser(authorities = "author:write")
-    @DisplayName("Удаление автора по id доступно для разрешения author:write")
-    @Test
-    public void shouldDeletingAuthorIsAvailableForAuthorWriter() throws Exception {
-        Author author = new Author();
-        author.setName("Тестовый автор-1");
-        idForDeleting = repository.save(author).getId();
+        // DELETING
+        Author author1 = new Author();
+        author1.setName("Тестовый автор-1");
+        idForDeleting = repository.save(author1).getId();
 
         mockMvc.perform(delete("/api/author/" + idForDeleting))
                 .andExpect(status().isOk());
-    }
 
-    @WithMockUser(authorities = "book:write")
-    @DisplayName("Удаление автора по id недоступно для разрешения book:write")
-    @Test
-    public void shouldDeletingAuthorIsNotAvailableForBookWriter() throws Exception {
-        Author author = new Author();
-        author.setName("Тестовый автор-1");
-        idForDeleting = repository.save(author).getId();
-
-        mockMvc.perform(delete("/api/author/" + idForDeleting))
-                .andExpect(status().isForbidden());
-    }
-
-    @WithMockUser(authorities = "genre:write")
-    @DisplayName("Удаление автора по id недоступно для разрешения genre:write")
-    @Test
-    public void shouldDeletingAuthorIsNotAvailableForGenreWriter() throws Exception {
-        Author author = new Author();
-        author.setName("Тестовый автор-1");
-        idForDeleting = repository.save(author).getId();
-
-        mockMvc.perform(delete("/api/author/" + idForDeleting))
-                .andExpect(status().isForbidden());
-    }
-
-    // -------------------------------- UPDATING --------------------------------
-    @WithMockUser(authorities = "author:write")
-    @DisplayName("Обновление автора по id доступно для разрешения author:write")
-    @Test
-    public void shouldUpdatingAuthorIsAvailableForAuthorWriter() throws Exception {
-        Author author = new Author();
-        author.setName("Тестовый автор-2");
-        idForPutting = repository.save(author).getId();
+        // UPDATING
+        Author author2 = new Author();
+        author2.setName("Тестовый автор-2");
+        idForPutting = repository.save(author2).getId();
 
         Author newAuthor = new Author();
         newAuthor.setName("Новый автор-3");
@@ -202,38 +148,47 @@ public class AuthorControllerTest {
                 .andExpect(status().isOk());
     }
 
-    @WithMockUser(authorities = "book:write")
-    @DisplayName("Обновление автора по id недоступно для разрешения book:write")
+    @WithAnonymousUser
+    @DisplayName("Анонимный пользователь не имеет доступа к любым REST методам. Всегда происходит redirect")
     @Test
-    public void shouldUpdatingAuthorIsNotAvailableForBookWriter() throws Exception {
-        Author author = new Author();
-        author.setName("Тестовый автор-2");
-        idForPutting = repository.save(author).getId();
+    public void shouldRedirectAfterAnyRestMethodForAnonymousUser() throws Exception {
+        // GET ALL
+        mockMvc.perform(get("/api/author"))
+                .andExpect(status().is3xxRedirection());
+
+        // GET BY ID
+        mockMvc.perform(get("/api/author/1"))
+                .andExpect(status().is3xxRedirection());
+
+        // CREATING
+        Author author1 = new Author();
+        author1.setName("Новый автор");
+
+        mockMvc.perform(post("/api/author")
+                        .content(convertObjectToJsonString(author1))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is3xxRedirection());
+
+        // DELETING
+        Author author2 = new Author();
+        author2.setName("Тестовый автор-1");
+        idForDeleting = repository.save(author2).getId();
+
+        mockMvc.perform(delete("/api/author/" + idForDeleting))
+                .andExpect(status().is3xxRedirection());
+
+        // UPDATING
+        Author author3 = new Author();
+        author3.setName("Тестовый автор-2");
+        idForPutting = repository.save(author3).getId();
 
         Author newAuthor = new Author();
         newAuthor.setName("Новый автор-3");
 
         mockMvc.perform(put("/api/author/" + idForPutting)
-                        .content(convertObjectToJsonString(author))
+                        .content(convertObjectToJsonString(newAuthor))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isForbidden());
-    }
-
-    @WithMockUser(authorities = "genre:write")
-    @DisplayName("Обновление автора по id недоступно для разрешения genre:write")
-    @Test
-    public void shouldUpdatingAuthorIsNotAvailableForGenreWriter() throws Exception {
-        Author author = new Author();
-        author.setName("Тестовый автор-2");
-        idForPutting = repository.save(author).getId();
-
-        Author newAuthor = new Author();
-        newAuthor.setName("Новый автор-3");
-
-        mockMvc.perform(put("/api/author/" + idForPutting)
-                        .content(convertObjectToJsonString(author))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isForbidden());
+                .andExpect(status().is3xxRedirection());
     }
 
     //Converts Object to Json String
