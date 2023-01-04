@@ -16,7 +16,7 @@
 <body>
     <header>
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <div class="collapse navbar-collapse" id="navbarNavDropdown">
+            <div class="collapse navbar-collapse d-flex justify-content-between" id="navbarNavDropdown">
                 <ul class="navbar-nav">
                     <li class="nav-item">
                         <a id="bnt-info" href="#" class="nav-link" onclick="showInfo()">Главная</a>
@@ -31,6 +31,10 @@
                         <a id="bnt-genres" href="#" class="nav-link" onclick="showGenres()">Жанры</a>
                     </li>
                 </ul>
+                <form action="/logout" method="post">
+                    <span class="fw-lighter" id="username"></span>
+                    <button type="submit" class="btn btn-sm btn-outline-dark me-2" id="loginBtn">Войти</button>
+                </form>
             </div>
         </nav>
     </header>

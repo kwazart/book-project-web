@@ -14,6 +14,7 @@ import com.polozov.bookprojectweb.service.BookService;
 import com.polozov.bookprojectweb.service.CommentService;
 import com.polozov.bookprojectweb.service.GenreService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -31,21 +32,25 @@ public class BookController {
     private final GenreService genreService;
     private final CommentService commentService;
 
+    @PreAuthorize("hasAuthority('book:read')")
     @GetMapping("/api/book")
     public List<BookDto> bookList() {
         return bookService.getAll().stream().map(BookDto::toDto).collect(Collectors.toList());
     }
 
+    @PreAuthorize("hasAuthority('book:read')")
     @GetMapping("/api/book/{id}")
     public BookDto getBook(@PathVariable("id") long id) {
         return  bookService.getById(id).map(BookDto::toDto).orElseThrow(() -> new BookNotFoundException(id));
     }
 
+    @PreAuthorize("hasAuthority('book:write')")
     @PostMapping("/api/book")
     public BookDto saveBook(@RequestBody BookDto bookDto) {
         return BookDto.toDto(bookService.add(BookDto.fromDto(bookDto)));
     }
 
+    @PreAuthorize("hasAuthority('book:write')")
     @PutMapping("/api/book/{id}")
     public BookDto updateBook(@RequestBody BookDto newBookDto, @PathVariable("id") long id) {
         return BookDto.toDto(bookService.getById(id).map(book -> {
@@ -66,6 +71,7 @@ public class BookController {
         }));
     }
 
+    @PreAuthorize("hasAuthority('book:write')")
     @DeleteMapping("/api/book/{id}")
     public void deleteGenre(@PathVariable("id") long id) {
         bookService.deleteById(id);

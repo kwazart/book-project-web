@@ -4,6 +4,7 @@ import com.polozov.bookprojectweb.controller.rest.dto.CommentDto;
 import com.polozov.bookprojectweb.domain.Comment;
 import com.polozov.bookprojectweb.service.CommentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,6 +18,7 @@ public class CommentController {
 
     private final CommentService commentService;
 
+    @PreAuthorize("hasAuthority('book:read')")
     @GetMapping("/api/comments/{id}")
     public List<CommentDto> getAllCommentsByBookId(@PathVariable("id") long bookId) {
         return commentService.getByBookId(bookId).stream().map(CommentDto::toDto).collect(Collectors.toList());

@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.security.access.prepost.PostFilter;
 
 import java.util.List;
 
@@ -14,6 +15,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     @Query("select b from Book b where b.name = :name")
     List<Book> findByBookName(@Param("name") String name);
 
+    @PostFilter("hasPermission(filterObject, 'READ')")
     @EntityGraph(value = "authors-genres-entity-graph")
     List<Book> findAll();
 
